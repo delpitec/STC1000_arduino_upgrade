@@ -1,0 +1,3 @@
+EntradaDigital	KEYWORD1
+EstaAtivo	KEYWORD2
+
