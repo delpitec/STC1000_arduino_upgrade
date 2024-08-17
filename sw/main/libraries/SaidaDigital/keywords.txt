@@ -1,0 +1,4 @@
+SaidaDigital 	KEYWORD1
+Ligar 		KEYWORD2
+Desligar	KEYWORD2
+Inverter	KEYWORD2

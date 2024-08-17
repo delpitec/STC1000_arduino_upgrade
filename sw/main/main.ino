@@ -1,4 +1,6 @@
 #include <TimerOne.h>
+#include "SaidaDigital.h"
+#include "EntradaDigital.h"
 
 extern volatile unsigned long timer0_millis;
 
@@ -10,16 +12,10 @@ const int segmentPins2[7] = {A0, A1, A2, A3, A4, A5, 13};
 const int display1ControlPin = 3;
 const int display2ControlPin = 2;
 
-// Pinos dos LEDs
-const int led1 = 8; // LED para janela aberta
-
 // Pino de leitura analógica
 const int sensor = A7;
 
 //botões
-const int button1 = 4;
-const int button2 = 12;
-const int button3 = 11;
 const int button4 = 9;
 const int button5 = 10;
 
@@ -52,8 +48,20 @@ int displayNumber = 0;
 
 const int tracos;
 
+/* ------ Global Setup BEGIN -------*/
+
+SaidaDigital Rele(8);                       // [Pino 8]
+EntradaDigital Botao_CIMA(4,1,1);           // [Pino 04 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
+EntradaDigital Botao_BAIXO(12,1,1);         // [Pino 12 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
+EntradaDigital Botao_S(11,1,1);             // [Pino 11 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
+EntradaDigital SensorJanelaAberta(9,1,1);   // [Pino 09 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
+EntradaDigital SensorJanelaFechada(10,1,1); // [Pino 10 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
+
+/* ------ Global Setup END -------*/
+
 void setup() 
 {
+  
   for (int i = 0; i < 7; i++) 
   {
     pinMode(segmentPins1[i], OUTPUT);
@@ -64,16 +72,11 @@ void setup()
   // Configurar pinos de controle do segundo display como saída
   pinMode(display2ControlPin, OUTPUT);
 
-  // Configurar pinos dos LEDs como saída
-  pinMode(led1, OUTPUT);
   
   // Configurar pino do sensor de temperatura como entrada
   pinMode(sensor, INPUT);
 
   // Configura o botão 0 e 1 como entrada com pull-up interno
-  pinMode(button1, INPUT);
-  pinMode(button2, INPUT); 
-  pinMode(button3, INPUT);
   pinMode(button4, INPUT); 
   pinMode(button5, INPUT);
 
@@ -85,147 +88,139 @@ int funcao = 1;
 
 void loop() 
 {
-    if(digitalRead(button3) == LOW)
+  if(Botao_S.EstaAtivoAguardando())
+  {
+    Rele.Desligar();
+    if(funcao > 4)
     {
-      while(digitalRead(button3) == LOW)
-      {
-        ;
-      }
-      DesligarTodosLeds();
-      if(funcao > 4)
-      {
-        noInterrupts();
-        timer0_millis = 0;
-        interrupts();
-        funcao = 1;
-      }
-      else
-      {
-        noInterrupts();
-        timer0_millis = 0;
-        interrupts();
-        funcao++;
-      }
+      noInterrupts();
+      timer0_millis = 0;
+      interrupts();
+      funcao = 1;
     }
+    else
+    {
+      noInterrupts();
+      timer0_millis = 0;
+      interrupts();
+      funcao++;
+    }
+  }
     
-        if (funcao == 1) 
-        {
-          if(millis() < 3000)
-          {
-              digitalWrite(display1ControlPin, HIGH);
-              digitalWrite(display2ControlPin, LOW);
-              displayDigit(segmentPins1, 15);
-              delay(5);
-          
-              digitalWrite(display1ControlPin, LOW);
-              digitalWrite(display2ControlPin, HIGH);
-              displayDigit(segmentPins2, 11);
-              delay(5);
-          }
-          else
-          {
-            janelaManual();
-          }
-        } 
-        else if (funcao == 2) 
-        {
-          if(millis() < 3000)
-          {
-              digitalWrite(display1ControlPin, HIGH);
-              digitalWrite(display2ControlPin, LOW);
-              displayDigit(segmentPins1, 11);
-              delay(5);
-          
-              digitalWrite(display1ControlPin, LOW);
-              digitalWrite(display2ControlPin, HIGH);
-              displayDigit(segmentPins2, 16);
-              delay(5);
-          }
-          else
-          {
-             temperaturaAutomatica();
-          }
-        } 
-        else if (funcao == 3) 
-        {
-          if(millis() < 3000)
-          {
-              digitalWrite(display1ControlPin, HIGH);
-              digitalWrite(display2ControlPin, LOW);
-              displayDigit(segmentPins1, 14);
-              delay(5);
-          
-              digitalWrite(display1ControlPin, LOW);
-              digitalWrite(display2ControlPin, HIGH);
-              displayDigit(segmentPins2, 13);
-              delay(5);
-          }
-          else
-          {
-             ajustarTempMenor();
-          }
-        } 
-        else if (funcao == 4) 
-        {
-          if(millis() < 3000)
-          {
-              digitalWrite(display1ControlPin, HIGH);
-              digitalWrite(display2ControlPin, LOW);
-              displayDigit(segmentPins1, 11);
-              delay(5);
-          
-              digitalWrite(display1ControlPin, LOW);
-              digitalWrite(display2ControlPin, HIGH);
-              displayDigit(segmentPins2, 12);
-              delay(5);
-          }
-          else
-          {
-              ajustarTempMaior();
-          }
-        }
-        else
-        {
-          ;
-        }
-        if(millis() >= 3456000000)// 40 dias
-        {
-            noInterrupts();
-            timer0_millis = 0;
-            interrupts();
-        }
+  if (funcao == 1) 
+  {
+    if(millis() < 3000)
+    {
+      digitalWrite(display1ControlPin, HIGH);
+      digitalWrite(display2ControlPin, LOW);
+      displayDigit(segmentPins1, 15);
+      delay(5);
+  
+      digitalWrite(display1ControlPin, LOW);
+      digitalWrite(display2ControlPin, HIGH);
+      displayDigit(segmentPins2, 11);
+      delay(5);
+    }
+    else
+    {
+      janelaManual();
+    }
+  } 
+  else if (funcao == 2) 
+  {
+    if(millis() < 3000)
+    {
+        digitalWrite(display1ControlPin, HIGH);
+        digitalWrite(display2ControlPin, LOW);
+        displayDigit(segmentPins1, 11);
+        delay(5);
+    
+        digitalWrite(display1ControlPin, LOW);
+        digitalWrite(display2ControlPin, HIGH);
+        displayDigit(segmentPins2, 16);
+        delay(5);
+    }
+    else
+    {
+       temperaturaAutomatica();
+    }
+  } 
+  else if (funcao == 3) 
+  {
+    if(millis() < 3000)
+    {
+        digitalWrite(display1ControlPin, HIGH);
+        digitalWrite(display2ControlPin, LOW);
+        displayDigit(segmentPins1, 14);
+        delay(5);
+    
+        digitalWrite(display1ControlPin, LOW);
+        digitalWrite(display2ControlPin, HIGH);
+        displayDigit(segmentPins2, 13);
+        delay(5);
+    }
+    else
+    {
+       ajustarTempMenor();
+    }
+  } 
+  else if (funcao == 4) 
+  {
+    if(millis() < 3000)
+    {
+        digitalWrite(display1ControlPin, HIGH);
+        digitalWrite(display2ControlPin, LOW);
+        displayDigit(segmentPins1, 11);
+        delay(5);
+    
+        digitalWrite(display1ControlPin, LOW);
+        digitalWrite(display2ControlPin, HIGH);
+        displayDigit(segmentPins2, 12);
+        delay(5);
+    }
+    else
+    {
+        ajustarTempMaior();
+    }
+  }
+  else
+  {
+    ;
+  }
+  
+  if(millis() >= 3456000000)// 40 dias
+  {
+      noInterrupts();
+      timer0_millis = 0;
+      interrupts();
+  }
 }
 
-void DesligarTodosLeds()
-{
-    digitalWrite(led1, LOW);
-}
 
 void janelaManual() 
 {
   displayNumber = tracos;
   
-  // Verifica o estado do botão 1 e 2
-  if(digitalRead(button1) == LOW)
+  if(Botao_CIMA.EstaAtivoAguardando())
   {
-    while(digitalRead(button1) == LOW)
+    if(SensorJanelaFechada.EstaAtivo() && !SensorJanelaAberta.EstaAtivo())
     {
-      ;
-    }
-    if(digitalRead(button4) == LOW && digitalRead(button5) == HIGH)
-    {
-      digitalWrite(led1, HIGH);
+      Rele.Ligar();
       delay(1000);
-      digitalWrite(led1, LOW);
+      Rele.Desligar();
     }
-    if(digitalRead(button5) == LOW && digitalRead(button4) == HIGH)
+  }
+  else if(Botao_BAIXO.EstaAtivoAguardando())
+  {
+    if(!SensorJanelaFechada.EstaAtivo() && SensorJanelaAberta.EstaAtivo())
     {
-      digitalWrite(led1, HIGH);
+      Rele.Ligar();
       delay(1000);
-      digitalWrite(led1, LOW);
+      Rele.Desligar();
     }
   }
 }
+
 void temperaturaAutomatica()
 { 
   int temperatura = lerTemperatura(sensor);
@@ -239,13 +234,13 @@ void temperaturaAutomatica()
     {
        if (digitalRead(button5) == HIGH)
        {
-          digitalWrite(led1, HIGH);
+          Rele.Ligar();
           delay(1000);
-          digitalWrite(led1, LOW);
+          Rele.Desligar();
        }
        else
        {
-          digitalWrite(led1, LOW); 
+          Rele.Desligar(); 
        }
     }
   }
@@ -255,39 +250,31 @@ void temperaturaAutomatica()
     {
       if (digitalRead(button4) == HIGH)
       {
-        digitalWrite(led1, HIGH);
+        Rele.Ligar();
         delay(1000);
-        digitalWrite(led1, LOW);
+        Rele.Desligar();
       }
       else
       {
-        digitalWrite(led1, LOW);
+        Rele.Desligar();
       }
     }
   }
   else
   {
-    digitalWrite(led1, LOW);
+    Rele.Desligar();
   }
 }
 
 
 void ajustarTempMaior() 
 {
-  if(digitalRead(button1) == LOW)
+  if(Botao_CIMA.EstaAtivoAguardando())
   {
-    while(digitalRead(button1) == LOW)
-    {
-      ;
-    }
     tempMaior++;
   }
-  if(digitalRead(button2) == LOW)
+  if(Botao_BAIXO.EstaAtivoAguardando())
   {
-    while(digitalRead(button2) == LOW)
-    {
-      ;
-    }
     tempMaior--;
   }
   if(tempMaior <= tempMenor)
@@ -299,20 +286,12 @@ void ajustarTempMaior()
 
 void ajustarTempMenor() 
 {
-  if(digitalRead(button1) == LOW)
+  if(Botao_CIMA.EstaAtivoAguardando())
     {
-      while(digitalRead(button1) == LOW)
-      {
-        ;
-      }
       tempMenor++;
     }
-  if(digitalRead(button2) == LOW)
+  if(Botao_BAIXO.EstaAtivoAguardando())
   {
-    while(digitalRead(button2) == LOW)
-    {
-      ;
-    }
     tempMenor--;
   }
   if(tempMenor >= tempMaior)
