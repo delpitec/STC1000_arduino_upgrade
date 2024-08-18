@@ -1,8 +1,12 @@
 #include <TimerOne.h>
+#include <EEPROM.h>
 #include "SaidaDigital.h"
 #include "EntradaDigital.h"
 
 extern volatile unsigned long timer0_millis;
+
+const int addrTempMaior = 0; // Endereço para tempMaior no EEPROM
+const int addrTempMenor = 2; // Endereço para tempMenor no EEPROM
 
 // Mapeamento dos segmentos do display
 const int segmentPins1[7] = {A0, A1, A2, A3, A4, A5, 13};
@@ -61,7 +65,6 @@ EntradaDigital SensorJanelaFechada(10,1,1); // [Pino 10 , Lógica Invertida (Ati
 
 void setup() 
 {
-  
   for (int i = 0; i < 7; i++) 
   {
     pinMode(segmentPins1[i], OUTPUT);
@@ -82,6 +85,7 @@ void setup()
 
   Timer1.initialize(500000);
   Timer1.attachInterrupt(timerIsr);
+  carregarTemperaturasDaEEPROM();
 }
 
 int funcao = 1;
@@ -96,10 +100,12 @@ void loop()
       noInterrupts();
       timer0_millis = 0;
       interrupts();
+      salvarTemperaturasNaEEPROM();
       funcao = 1;
     }
     else
     {
+      //TempoNomeDaFunao.Init(3000); -> Pega o millis e salva  millisAntigo = 20000  tempo de espera = 3000
       noInterrupts();
       timer0_millis = 0;
       interrupts();
@@ -109,7 +115,7 @@ void loop()
     
   if (funcao == 1) 
   {
-    if(millis() < 3000)
+    if(millis() < 3000 /*!TempoNomeDaFunao.Acabou() */) // millisAntigo + tempo de espera < millis()
     {
       digitalWrite(display1ControlPin, HIGH);
       digitalWrite(display2ControlPin, LOW);
@@ -316,6 +322,25 @@ int lerTemperatura(int pin)
   int sensorValor = analogRead(sensor);  // Ler o valor analógico do sensor (0-1023)
   int temp = map(sensorValor, 0, 1023, 0, 99);  // Converter para 0-99 graus
   return temp;
+}
+
+void salvarTemperaturasNaEEPROM()
+{
+  EEPROM.put(addrTempMaior, tempMaior);
+  EEPROM.put(addrTempMenor, tempMenor);
+}
+
+void carregarTemperaturasDaEEPROM()
+{
+  EEPROM.get(addrTempMaior, tempMaior);
+  EEPROM.get(addrTempMenor, tempMenor);
+
+  // Verificar se os valores carregados são válidos
+  if (tempMaior <= tempMenor || tempMaior > 99 || tempMenor < 0) 
+  {
+    tempMaior = 25;  // Valor padrão
+    tempMenor = 15;  // Valor padrão
+  }
 }
 
 void timerIsr()
