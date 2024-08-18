@@ -1,4 +1,5 @@
 #include <TimerOne.h>
+#include <EEPROM.h>
 #include "SaidaDigital.h"
 #include "EntradaDigital.h"
 
@@ -19,8 +20,8 @@ const int sensor = A7;
 const int button4 = 9;
 const int button5 = 10;
 
-int tempMaior = 25;
-int tempMenor = 15;
+int TemperaturaDeAbertura = 25;
+int TemperaturaDeFechamento = 15;
 
 // Padrões para os números de 0 a 9
 const int binarios[17][7] = 
@@ -44,7 +45,7 @@ const int binarios[17][7] =
   {0, 1, 1, 1, 1, 1, 0}  // U
 };
 
-int displayNumber = 0;
+int displayNumero = 0;
 
 const int tracos;
 
@@ -56,12 +57,13 @@ EntradaDigital Botao_BAIXO(12,1,1);         // [Pino 12 , Lógica Invertida (Ati
 EntradaDigital Botao_S(11,1,1);             // [Pino 11 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
 EntradaDigital SensorJanelaAberta(9,1,1);   // [Pino 09 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
 EntradaDigital SensorJanelaFechada(10,1,1); // [Pino 10 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
+const int eepromTempMaior = 0; // Endereço para tempMaior no EEPROM
+const int eepromTempMenor = 2; // Endereço para tempMenor no EEPROM
 
 /* ------ Global Setup END -------*/
 
 void setup() 
 {
-  
   for (int i = 0; i < 7; i++) 
   {
     pinMode(segmentPins1[i], OUTPUT);
@@ -72,7 +74,6 @@ void setup()
   // Configurar pinos de controle do segundo display como saída
   pinMode(display2ControlPin, OUTPUT);
 
-  
   // Configurar pino do sensor de temperatura como entrada
   pinMode(sensor, INPUT);
 
@@ -82,6 +83,7 @@ void setup()
 
   Timer1.initialize(500000);
   Timer1.attachInterrupt(timerIsr);
+  carregarTemperaturasDaEEPROM();
 }
 
 int funcao = 1;
@@ -96,6 +98,7 @@ void loop()
       noInterrupts();
       timer0_millis = 0;
       interrupts();
+      salvarTemperaturasNaEEPROM();
       funcao = 1;
     }
     else
@@ -161,7 +164,7 @@ void loop()
     }
     else
     {
-       ajustarTempMenor();
+       ajustarTemperaturaDeFechamento();
     }
   } 
   else if (funcao == 4) 
@@ -180,7 +183,7 @@ void loop()
     }
     else
     {
-        ajustarTempMaior();
+        ajustarTemperaturaDeAbertura();
     }
   }
   else
@@ -199,7 +202,7 @@ void loop()
 
 void janelaManual() 
 {
-  displayNumber = tracos;
+  displayNumero = tracos;
   
   if(Botao_CIMA.EstaAtivoAguardando())
   {
@@ -225,12 +228,12 @@ void temperaturaAutomatica()
 { 
   int temperatura = lerTemperatura(sensor);
 
-  displayNumber = temperatura;
+  displayNumero = temperatura;
 
   //sensor de quando a janela deve parar de abrir e parar de fechar
-  if(temperatura <= tempMenor && digitalRead(button4) == LOW)
+  if(temperatura <= TemperaturaDeFechamento && digitalRead(button4) == LOW)
   {
-    while(temperatura <= tempMenor && digitalRead(button4) == LOW)
+    while(temperatura <= TemperaturaDeFechamento && digitalRead(button4) == LOW)
     {
        if (digitalRead(button5) == HIGH)
        {
@@ -244,9 +247,9 @@ void temperaturaAutomatica()
        }
     }
   }
-  else if(temperatura >= tempMaior && digitalRead(button5) == LOW)
+  else if(temperatura >= TemperaturaDeAbertura && digitalRead(button5) == LOW)
   {
-    while(temperatura >= tempMaior && digitalRead(button5) == LOW)
+    while(temperatura >= TemperaturaDeAbertura && digitalRead(button5) == LOW)
     {
       if (digitalRead(button4) == HIGH)
       {
@@ -267,39 +270,39 @@ void temperaturaAutomatica()
 }
 
 
-void ajustarTempMaior() 
+void ajustarTemperaturaDeAbertura() 
 {
   if(Botao_CIMA.EstaAtivoAguardando())
   {
-    tempMaior++;
+    TemperaturaDeAbertura++;
   }
   if(Botao_BAIXO.EstaAtivoAguardando())
   {
-    tempMaior--;
+    TemperaturaDeAbertura--;
   }
-  if(tempMaior <= tempMenor)
+  if(TemperaturaDeAbertura <= TemperaturaDeFechamento)
   {
-    tempMaior = tempMenor + 1;
+    TemperaturaDeAbertura = TemperaturaDeFechamento + 1;
   }
-  displayNumber = tempMaior;
+  displayNumero = TemperaturaDeAbertura;
 }
 
-void ajustarTempMenor() 
+void ajustarTemperaturaDeFechamento() 
 {
   if(Botao_CIMA.EstaAtivoAguardando())
-    {
-      tempMenor++;
-    }
+  {
+    TemperaturaDeFechamento++;
+  }
   if(Botao_BAIXO.EstaAtivoAguardando())
   {
-    tempMenor--;
+    TemperaturaDeFechamento--;
   }
-  if(tempMenor >= tempMaior)
+  if(TemperaturaDeFechamento >= TemperaturaDeAbertura)
   {
-    tempMenor = tempMaior -1;
+    TemperaturaDeFechamento = TemperaturaDeAbertura - 1;
   }
   
-  displayNumber = tempMenor;
+  displayNumero = TemperaturaDeFechamento;
 }
 
 
@@ -318,11 +321,74 @@ int lerTemperatura(int pin)
   return temp;
 }
 
+void salvarTemperaturasNaEEPROM()
+{
+  int tentativas = 0;
+  bool sucesso = false;
+
+  // Tentativa de salvar tempMaior
+  while (tentativas < 3 && !sucesso)
+  {
+    // Escrever tempMaior na EEPROM
+    EEPROM.put(eepromTempMaior, TemperaturaDeAbertura);
+
+    // Ler tempMaior da EEPROM para verificar se foi salvo corretamente
+    int valorLido;
+    EEPROM.get(eepromTempMaior, valorLido);
+
+    if (valorLido == TemperaturaDeAbertura)
+    {
+      sucesso = true; // Salvo com sucesso
+    }
+    else
+    {
+      tentativas++;
+    }
+  }
+  
+  // Resetar variáveis para a próxima verificação
+  tentativas = 0;
+  sucesso = false;
+
+  // Tentativa de salvar tempMenor
+  while(tentativas < 3 && !sucesso)
+  {
+    // Escrever tempMenor na EEPROM
+    EEPROM.put(eepromTempMenor, TemperaturaDeFechamento);
+
+    // Ler tempMenor da EEPROM para verificar se foi salvo corretamente
+    int valorLido;
+    EEPROM.get(eepromTempMenor, valorLido);
+
+    if (valorLido == TemperaturaDeFechamento)
+    {
+      sucesso = true; // Salvo com sucesso
+    }
+    else
+    {
+      tentativas++;
+    }
+  }
+}
+
+void carregarTemperaturasDaEEPROM()
+{
+  EEPROM.get(eepromTempMaior, TemperaturaDeAbertura);
+  EEPROM.get(eepromTempMenor, TemperaturaDeFechamento);
+
+  // Verificar se os valores carregados são válidos
+  if (TemperaturaDeAbertura <= TemperaturaDeFechamento || TemperaturaDeAbertura > 99 || TemperaturaDeFechamento < 0) 
+  {
+    TemperaturaDeAbertura = 25;  // Valor padrão
+    TemperaturaDeFechamento = 15;  // Valor padrão
+  }
+}
+
 void timerIsr()
 {
   static bool trocadisplay = false;
   
-  if (displayNumber == tracos && millis() >= 3000) 
+  if (displayNumero == tracos && millis() >= 3000) 
   {
     if (trocadisplay) 
     {
@@ -343,14 +409,14 @@ void timerIsr()
     {
       if(trocadisplay)
       {
-        int dezenas = displayNumber / 10;
+        int dezenas = displayNumero / 10;
         digitalWrite(display1ControlPin, HIGH);
         digitalWrite(display2ControlPin, LOW);
         displayDigit(segmentPins1, dezenas);
       }
       else
       {
-        int unidades = displayNumber % 10;
+        int unidades = displayNumero % 10;
         digitalWrite(display1ControlPin, LOW);
         digitalWrite(display2ControlPin, HIGH);
         displayDigit(segmentPins2, unidades);
