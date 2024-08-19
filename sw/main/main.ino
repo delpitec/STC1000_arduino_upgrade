@@ -1,3 +1,4 @@
+#include <Thermistor.h>
 #include <TimerOne.h>
 #include <EEPROM.h>
 #include "SaidaDigital.h"
@@ -9,12 +10,11 @@ extern volatile unsigned long timer0_millis;
 const int segmentPins1[7] = {A0, A1, A2, A3, A4, A5, 13};
 const int segmentPins2[7] = {A0, A1, A2, A3, A4, A5, 13};
 
-
 const int display1ControlPin = 3;
 const int display2ControlPin = 2;
 
-// Pino de leitura analógica
-const int sensor = A7;
+// Pino de leitura de temperatura
+Thermistor temp(A7);
 
 //botões
 const int button4 = 9;
@@ -73,9 +73,6 @@ void setup()
   pinMode(display1ControlPin, OUTPUT);
   // Configurar pinos de controle do segundo display como saída
   pinMode(display2ControlPin, OUTPUT);
-
-  // Configurar pino do sensor de temperatura como entrada
-  pinMode(sensor, INPUT);
 
   // Configura o botão 0 e 1 como entrada com pull-up interno
   pinMode(button4, INPUT); 
@@ -212,10 +209,34 @@ void janelaManual()
       delay(1000);
       Rele.Desligar();
     }
+    else if(!SensorJanelaFechada.EstaAtivo() && !SensorJanelaAberta.EstaAtivo())
+    {
+      Rele.Ligar();
+      delay(1000);
+      Rele.Desligar();
+    }
+    else if(SensorJanelaFechada.EstaAtivo() && SensorJanelaAberta.EstaAtivo())
+    {
+      Rele.Ligar();
+      delay(1000);
+      Rele.Desligar();
+    }
   }
   else if(Botao_BAIXO.EstaAtivoAguardando())
   {
     if(!SensorJanelaFechada.EstaAtivo() && SensorJanelaAberta.EstaAtivo())
+    {
+      Rele.Ligar();
+      delay(1000);
+      Rele.Desligar();
+    }
+    else if(!SensorJanelaFechada.EstaAtivo() && !SensorJanelaAberta.EstaAtivo())
+    {
+      Rele.Ligar();
+      delay(1000);
+      Rele.Desligar();
+    }
+    else if(SensorJanelaFechada.EstaAtivo() && SensorJanelaAberta.EstaAtivo())
     {
       Rele.Ligar();
       delay(1000);
@@ -226,8 +247,8 @@ void janelaManual()
 
 void temperaturaAutomatica()
 { 
-  int temperatura = lerTemperatura(sensor);
-
+  int temperatura = temp.getTemp();
+  
   displayNumero = temperatura;
 
   //sensor de quando a janela deve parar de abrir e parar de fechar
@@ -312,13 +333,6 @@ void displayDigit(const int segmentPins[], int digitos)
   {
     digitalWrite(segmentPins[i], binarios[digitos][i]);
   }
-}
-
-int lerTemperatura(int pin)
-{
-  int sensorValor = analogRead(sensor);  // Ler o valor analógico do sensor (0-1023)
-  int temp = map(sensorValor, 0, 1023, 0, 99);  // Converter para 0-99 graus
-  return temp;
 }
 
 void salvarTemperaturasNaEEPROM()
