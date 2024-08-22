@@ -3,6 +3,7 @@
 #include <EEPROM.h>
 #include "SaidaDigital.h"
 #include "EntradaDigital.h"
+#include "CustomTimer.h"
 
 extern volatile unsigned long timer0_millis;
 
@@ -42,9 +43,10 @@ const int binarios[17][7] =
   {0, 1, 1, 1, 1, 1, 0}  // U
 };
 
+// Numero que sera exibido nos displays 7seg
 int displayNumero = 0;
 
-const int tracos;
+
 
 /* ------ Global Setup BEGIN -------*/
 
@@ -61,6 +63,8 @@ THERMISTOR thermistor(A7,             // Analog pin
                       10000,          // Nominal resistance at 25 ºC
                       3950,           // thermistor's beta coefficient
                       10000);         // Value of the series resistor
+
+CustomTimer tmr(3000);
 
 /* ------ Global Setup END -------*/
 
@@ -91,56 +95,35 @@ void loop()
 {
   if(Botao_S.EstaAtivoAguardando())
   {
-    Rele.Desligar();
+    tmr.Init(3000);
     if(funcao > 4)
     {
-      noInterrupts();
-      timer0_millis = 0;
-      interrupts();
       salvarTemperaturasNaEEPROM();
       funcao = 1;
     }
     else
-    {
-      noInterrupts();
-      timer0_millis = 0;
-      interrupts();
+    { 
       funcao++;
     }
   }
     
   if (funcao == 1) 
   {
-    if(millis() < 3000)
+    if(!tmr.Finished())
     {
-      digitalWrite(display1ControlPin, HIGH);
-      digitalWrite(display2ControlPin, LOW);
-      displayDigit(segmentPins1, 15);
-      delay(5);
-  
-      digitalWrite(display1ControlPin, LOW);
-      digitalWrite(display2ControlPin, HIGH);
-      displayDigit(segmentPins2, 11);
-      delay(5);
+      ForcarDisplayTexto("MA");
     }
     else
     {
+      ForcarDisplayTexto("--");
       janelaManual();
     }
   } 
   else if (funcao == 2) 
   {
-    if(millis() < 3000)
+    if(!tmr.Finished())
     {
-        digitalWrite(display1ControlPin, HIGH);
-        digitalWrite(display2ControlPin, LOW);
-        displayDigit(segmentPins1, 11);
-        delay(5);
-    
-        digitalWrite(display1ControlPin, LOW);
-        digitalWrite(display2ControlPin, HIGH);
-        displayDigit(segmentPins2, 16);
-        delay(5);
+      ForcarDisplayTexto("AU");
     }
     else
     {
@@ -149,36 +132,20 @@ void loop()
   } 
   else if (funcao == 3) 
   {
-    if(millis() < 3000)
+    if(!tmr.Finished())
     {
-        digitalWrite(display1ControlPin, HIGH);
-        digitalWrite(display2ControlPin, LOW);
-        displayDigit(segmentPins1, 14);
-        delay(5);
-    
-        digitalWrite(display1ControlPin, LOW);
-        digitalWrite(display2ControlPin, HIGH);
-        displayDigit(segmentPins2, 13);
-        delay(5);
+      ForcarDisplayTexto("FE");
     }
     else
     {
-       ajustarTemperaturaDeFechamento();
+      ajustarTemperaturaDeFechamento();
     }
   } 
   else if (funcao == 4) 
   {
-    if(millis() < 3000)
+    if(!tmr.Finished())
     {
-        digitalWrite(display1ControlPin, HIGH);
-        digitalWrite(display2ControlPin, LOW);
-        displayDigit(segmentPins1, 11);
-        delay(5);
-    
-        digitalWrite(display1ControlPin, LOW);
-        digitalWrite(display2ControlPin, HIGH);
-        displayDigit(segmentPins2, 12);
-        delay(5);
+      ForcarDisplayTexto("AB");
     }
     else
     {
@@ -190,19 +157,11 @@ void loop()
     ;
   }
   
-  if(millis() >= 3456000000)// 40 dias
-  {
-      noInterrupts();
-      timer0_millis = 0;
-      interrupts();
-  }
 }
 
 
 void janelaManual() 
 {
-  displayNumero = tracos;
-  
   if(Botao_CIMA.EstaAtivoAguardando())
   {
     if(SensorJanelaFechada.EstaAtivo() && !SensorJanelaAberta.EstaAtivo())
@@ -376,44 +335,64 @@ void carregarTemperaturasDaEEPROM()
   }
 }
 
+void ForcarDisplayTexto(String texto)
+{
+  if (texto == "AB") {
+    displayNumero = 11 * 100 + 12;  // Codifica como 11-12
+  } else if (texto == "FE") {
+    displayNumero = 14 * 100 + 13;  // Codifica como 14-13
+  } else if (texto == "MA") {
+    displayNumero = 15 * 100 + 11;  // Codifica como 15-11
+  } else if (texto == "AU") {
+    displayNumero = 11 * 100 + 16;  // Codifica como 11-16
+  } else if (texto == "--") {
+    displayNumero = 10 * 100 + 10;  // Codifica como 10-10 
+  } else 
+  {
+    displayNumero = 10 * 100 + 10;  // Inválido ... Codifica como 10-10
+  }  
+}
+
 void timerIsr()
 {
-  static bool trocadisplay = false;
+  static unsigned int trocadisplay = false;
   
-  if (displayNumero == tracos && millis() >= 3000) 
+  // Mostra numeros
+  if(displayNumero < 100)
   {
-    if (trocadisplay) 
+    if(trocadisplay)
     {
+      int dezenas = displayNumero / 10;
       digitalWrite(display1ControlPin, HIGH);
       digitalWrite(display2ControlPin, LOW);
-      displayDigit(segmentPins1, 10);
-    } 
-    else 
+      displayDigit(segmentPins1, dezenas);
+    }
+    else
     {
+      int unidades = displayNumero % 10;
       digitalWrite(display1ControlPin, LOW);
       digitalWrite(display2ControlPin, HIGH);
-      displayDigit(segmentPins2, 10); 
-    }
-  } 
-  else 
-  {
-    if(millis() >= 3000)
-    {
-      if(trocadisplay)
-      {
-        int dezenas = displayNumero / 10;
-        digitalWrite(display1ControlPin, HIGH);
-        digitalWrite(display2ControlPin, LOW);
-        displayDigit(segmentPins1, dezenas);
-      }
-      else
-      {
-        int unidades = displayNumero % 10;
-        digitalWrite(display1ControlPin, LOW);
-        digitalWrite(display2ControlPin, HIGH);
-        displayDigit(segmentPins2, unidades);
-      }
+      displayDigit(segmentPins2, unidades);
     }
   }
+  // Mostra as letras
+  else
+  {
+    if(trocadisplay)
+    {
+      int dezenas = displayNumero / 100;
+      digitalWrite(display1ControlPin, HIGH);
+      digitalWrite(display2ControlPin, LOW);
+      displayDigit(segmentPins1, dezenas);
+    }
+    else
+    {
+      int unidades = displayNumero % 100;
+      digitalWrite(display1ControlPin, LOW);
+      digitalWrite(display2ControlPin, HIGH);
+      displayDigit(segmentPins2, unidades);
+    }
+ }
+
   trocadisplay = !trocadisplay;
 }
