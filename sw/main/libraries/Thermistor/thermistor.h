@@ -75,6 +75,15 @@ class THERMISTOR
      * @return temperature in 0.01 ºC
      */
     int read(void);
+
+    /**
+    * read_int
+    *
+    * Read temperature from thermistor
+    *
+    * @return temperature in 1 ºC
+    */
+    int read_int(void);
 };
 
 #endif

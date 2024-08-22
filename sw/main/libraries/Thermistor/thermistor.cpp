@@ -127,3 +127,14 @@ int THERMISTOR::read(void)
   return (int)(steinhart * 10);
 }
 
+/**
+ * read_int
+ *
+ * Read temperature from thermistor
+ *
+ * @return temperature in 1 ºC
+ */
+int THERMISTOR::read_int(void)
+{
+  return this->read() / 10;
+}

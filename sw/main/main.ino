@@ -1,4 +1,4 @@
-#include <Thermistor.h>
+#include <thermistor.h>
 #include <TimerOne.h>
 #include <EEPROM.h>
 #include "SaidaDigital.h"
@@ -12,9 +12,6 @@ const int segmentPins2[7] = {A0, A1, A2, A3, A4, A5, 13};
 
 const int display1ControlPin = 3;
 const int display2ControlPin = 2;
-
-// Pino de leitura de temperatura
-Thermistor temp(A7);
 
 //botões
 const int button4 = 9;
@@ -59,6 +56,11 @@ EntradaDigital SensorJanelaAberta(9,1,1);   // [Pino 09 , Lógica Invertida (Ati
 EntradaDigital SensorJanelaFechada(10,1,1); // [Pino 10 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
 const int eepromTempMaior = 0; // Endereço para tempMaior no EEPROM
 const int eepromTempMenor = 2; // Endereço para tempMenor no EEPROM
+
+THERMISTOR thermistor(A7,             // Analog pin
+                      10000,          // Nominal resistance at 25 ºC
+                      3950,           // thermistor's beta coefficient
+                      10000);         // Value of the series resistor
 
 /* ------ Global Setup END -------*/
 
@@ -223,7 +225,7 @@ void janelaManual()
 
 void temperaturaAutomatica()
 { 
-  int temperatura = temp.getTemp();
+  int temperatura = thermistor.read_int();
   
   displayNumero = temperatura;
 
