@@ -19,6 +19,12 @@ DisplayMultiplex Display(segmentPins1, segmentPins2, display1ControlPin, display
 // Botões
 const int button4 = 9;
 const int button5 = 10;
+const int A = 11;
+const int B = 12;
+const int M = 15;
+const int U = 16;
+const int E = 13;
+const int F = 14;
 
 int TemperaturaDeAbertura = 25;
 int TemperaturaDeFechamento = 15;
@@ -78,7 +84,7 @@ void loop()
   {
     if(!tmr.Finished())
     {
-      Display.displayLetra(15, 11);
+      Display.displayLetra(M, A);
     }
     else
     {
@@ -89,7 +95,7 @@ void loop()
   {
     if(!tmr.Finished())
     {
-      Display.displayLetra(11, 16);
+      Display.displayLetra(A, U);
     }
     else
     {
@@ -100,7 +106,7 @@ void loop()
   {
     if(!tmr.Finished())
     {
-      Display.displayLetra(11, 12);
+      Display.displayLetra(F, E);
     }
     else
     {
@@ -111,7 +117,7 @@ void loop()
   {
     if(!tmr.Finished())
     {
-      Display.displayLetra(14, 13);
+      Display.displayLetra(A, B);
     }
     else
     {
