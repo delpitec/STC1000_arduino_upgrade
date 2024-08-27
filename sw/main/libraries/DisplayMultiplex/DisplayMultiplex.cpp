@@ -4,13 +4,26 @@
 // Inicialização das variáveis estáticas
 DisplayMultiplex* DisplayMultiplex::_instance = nullptr;
 
-DisplayMultiplex::DisplayMultiplex(const int segmentPins1[], const int segmentPins2[], int display1ControlPin, int display2ControlPin, int displayNumber)
+// Letras estáticas
+const int DisplayMultiplex::A = 11;
+const int DisplayMultiplex::B = 12;
+const int DisplayMultiplex::M = 15;
+const int DisplayMultiplex::U = 16;
+const int DisplayMultiplex::E = 13;
+const int DisplayMultiplex::F = 14;
+const int DisplayMultiplex::tracos = 110;
+
+DisplayMultiplex::DisplayMultiplex(int display1ControlPin, int display2ControlPin)
 {
-    _segmentPins1 = segmentPins1;
-    _segmentPins2 = segmentPins2;
+    // Inicializa os pinos dos segmentos para ambos os displays
+    const int tempSegmentPins1[7] = {A0, A1, A2, A3, A4, A5, 13};
+    const int tempSegmentPins2[7] = {A0, A1, A2, A3, A4, A5, 13};
+    memcpy(segmentPins1, tempSegmentPins1, sizeof(segmentPins1));
+    memcpy(segmentPins2, tempSegmentPins2, sizeof(segmentPins2));
+
     _display1ControlPin = display1ControlPin;
     _display2ControlPin = display2ControlPin;
-    _displayNumber = displayNumber;
+    _displayNumber = 0;
     _instance = this;  // Armazena a instância atual
 }
 
@@ -19,8 +32,8 @@ void DisplayMultiplex::Begin()
 {
     for (int i = 0; i < 7; i++)
     {
-        pinMode(_segmentPins1[i], OUTPUT);
-        pinMode(_segmentPins2[i], OUTPUT);
+        pinMode(segmentPins1[i], OUTPUT);
+        pinMode(segmentPins2[i], OUTPUT);
     }
     pinMode(_display1ControlPin, OUTPUT);
     pinMode(_display2ControlPin, OUTPUT);
@@ -43,12 +56,12 @@ void DisplayMultiplex::displayLetra(int n1, int n2)
 {
     digitalWrite(_display1ControlPin, HIGH);
     digitalWrite(_display2ControlPin, LOW);
-    displayDigit(_segmentPins1, n1);
+    displayDigit(segmentPins1, n1);
     delay(5);
 
     digitalWrite(_display1ControlPin, LOW);
     digitalWrite(_display2ControlPin, HIGH);
-    displayDigit(_segmentPins2, n2);
+    displayDigit(segmentPins2, n2);
     delay(5);
 }
 
@@ -57,19 +70,19 @@ void DisplayMultiplex::timerIsr()
 {
     static bool _trocaDisplay = false;
     
-    if(_instance->_displayNumber == 999)
+    if(_instance->_displayNumber == 110)
     {
         if(_trocaDisplay)
         {
             digitalWrite(_instance->_display1ControlPin, HIGH);
             digitalWrite(_instance->_display2ControlPin, LOW);
-            _instance->displayDigit(_instance->_segmentPins1, 10);
+            _instance->displayDigit(_instance->segmentPins1, 10);
         }
         else
         {
             digitalWrite(_instance->_display1ControlPin, LOW);
             digitalWrite(_instance->_display2ControlPin, HIGH);
-            _instance->displayDigit(_instance->_segmentPins2, 10);
+            _instance->displayDigit(_instance->segmentPins2, 10);
         }
     }
     else
@@ -79,14 +92,14 @@ void DisplayMultiplex::timerIsr()
             int dezenas = _instance->_displayNumber / 10;
             digitalWrite(_instance->_display1ControlPin, HIGH);
             digitalWrite(_instance->_display2ControlPin, LOW);
-            _instance->displayDigit(_instance->_segmentPins1, dezenas);
+            _instance->displayDigit(_instance->segmentPins1, dezenas);
         }
         else
         {
             int unidades = _instance->_displayNumber % 10;
             digitalWrite(_instance->_display1ControlPin, LOW);
             digitalWrite(_instance->_display2ControlPin, HIGH);
-            _instance->displayDigit(_instance->_segmentPins2, unidades);
+            _instance->displayDigit(_instance->segmentPins2, unidades);
         }
     }
     _trocaDisplay = !_trocaDisplay;

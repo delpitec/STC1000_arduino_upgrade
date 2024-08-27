@@ -6,25 +6,16 @@
 #include "CustomTimer.h"
 #include "DisplayMultiplex.h"
 
-// Definição dos pinos do display
-const int segmentPins1[7] = {A0, A1, A2, A3, A4, A5, 13};
-const int segmentPins2[7] = {A0, A1, A2, A3, A4, A5, 13};
 const int display1ControlPin = 3;
 const int display2ControlPin = 2;
-int displayNumber = 0;
 
 // Instância da classe DisplayMultiplex
-DisplayMultiplex Display(segmentPins1, segmentPins2, display1ControlPin, display2ControlPin, displayNumber);
+DisplayMultiplex Display(display1ControlPin, display2ControlPin);
 
 // Botões
 const int button4 = 9;
 const int button5 = 10;
-const int A = 11;
-const int B = 12;
-const int M = 15;
-const int U = 16;
-const int E = 13;
-const int F = 14;
+    
 
 int TemperaturaDeAbertura = 25;
 int TemperaturaDeFechamento = 15;
@@ -84,7 +75,7 @@ void loop()
   {
     if(!tmr.Finished())
     {
-      Display.displayLetra(M, A);
+      Display.displayLetra(DisplayMultiplex::M, DisplayMultiplex::A);
     }
     else
     {
@@ -95,7 +86,7 @@ void loop()
   {
     if(!tmr.Finished())
     {
-      Display.displayLetra(A, U);
+      Display.displayLetra(DisplayMultiplex::A, DisplayMultiplex::U);
     }
     else
     {
@@ -106,7 +97,7 @@ void loop()
   {
     if(!tmr.Finished())
     {
-      Display.displayLetra(F, E);
+      Display.displayLetra(DisplayMultiplex::F, DisplayMultiplex::E);
     }
     else
     {
@@ -117,7 +108,7 @@ void loop()
   {
     if(!tmr.Finished())
     {
-      Display.displayLetra(A, B);
+      Display.displayLetra(DisplayMultiplex::A, DisplayMultiplex::B);
     }
     else
     {
@@ -134,8 +125,7 @@ void loop()
 
 void janelaManual() 
 {
-  int tracos = 999;
-  Display.showNumber(tracos); // Exibe tracos
+  Display.showNumber(DisplayMultiplex::tracos); // Exibe tracos
 
   if(Botao_CIMA.EstaAtivoAguardando())
   {
@@ -217,6 +207,10 @@ void ajustarTemperaturaDeAbertura()
   {
     TemperaturaDeAbertura = TemperaturaDeFechamento + 1;
   }
+  if(TemperaturaDeAbertura >= 100)
+  {
+    TemperaturaDeAbertura = 99;
+  }
   // Exibe a temperatura de abertura no display
   Display.showNumber(TemperaturaDeAbertura); 
 }
@@ -234,6 +228,10 @@ void ajustarTemperaturaDeFechamento()
   if(TemperaturaDeFechamento >= TemperaturaDeAbertura)
   {
     TemperaturaDeFechamento = TemperaturaDeAbertura - 1;
+  }
+  if(TemperaturaDeFechamento <= 0)
+  {
+    TemperaturaDeFechamento = 1;
   }
   // Exibe a temperatura de fechamento no display
   Display.showNumber(TemperaturaDeFechamento); 

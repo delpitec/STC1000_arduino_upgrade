@@ -8,8 +8,8 @@ class DisplayMultiplex
 {
 public:
     // Construtor
-    DisplayMultiplex(const int segmentPins1[], const int segmentPins2[], int display1ControlPin, int display2ControlPin, int displayNumber);
-    
+    DisplayMultiplex(int display1ControlPin, int display2ControlPin);
+
     // Inicializa o display
     void Begin();
 
@@ -21,6 +21,15 @@ public:
 
     // Mostra letras no display
     void displayLetra(int n1, int n2);
+
+    // Letras estáticas (A, B, M, U, E, F)
+    static const int A;
+    static const int B;
+    static const int M;
+    static const int U;
+    static const int E;
+    static const int F;
+    static const int tracos;
 
 private:
     // Função de interrupção para atualização de displays
@@ -51,9 +60,11 @@ private:
         {0, 1, 1, 1, 1, 1, 0}  // U
     };
 
+    // Array pinos
+    int segmentPins1[7];
+    int segmentPins2[7];
+
     // Pinos de controle dos displays e segmentos
-    const int* _segmentPins1;
-    const int* _segmentPins2;
     int _display1ControlPin;
     int _display2ControlPin;
 
