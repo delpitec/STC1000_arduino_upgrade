@@ -8,7 +8,7 @@ class DisplayMultiplex
 {
 public:
     // Construtor
-    DisplayMultiplex(int display1ControlPin, int display2ControlPin);
+    DisplayMultiplex(int display1ControlPin, int display2ControlPin, int a, int b, int c, int d, int e, int f, int g);
 
     // Inicializa o display
     void Begin();

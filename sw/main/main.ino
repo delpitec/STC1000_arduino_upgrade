@@ -6,16 +6,12 @@
 #include "CustomTimer.h"
 #include "DisplayMultiplex.h"
 
-const int display1ControlPin = 3;
-const int display2ControlPin = 2;
-
 // Instância da classe DisplayMultiplex
-DisplayMultiplex Display(display1ControlPin, display2ControlPin);
+DisplayMultiplex Display(3, 2, A0, A1, A2, A3, A4, A5, 13);
 
 // Botões
 const int button4 = 9;
 const int button5 = 10;
-    
 
 int TemperaturaDeAbertura = 25;
 int TemperaturaDeFechamento = 15;

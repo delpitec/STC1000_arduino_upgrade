@@ -13,11 +13,11 @@ const int DisplayMultiplex::E = 13;
 const int DisplayMultiplex::F = 14;
 const int DisplayMultiplex::tracos = 110;
 
-DisplayMultiplex::DisplayMultiplex(int display1ControlPin, int display2ControlPin)
+DisplayMultiplex::DisplayMultiplex(int display1ControlPin, int display2ControlPin, int a, int b, int c, int d, int e, int f, int g)
 {
     // Inicializa os pinos dos segmentos para ambos os displays
-    const int tempSegmentPins1[7] = {A0, A1, A2, A3, A4, A5, 13};
-    const int tempSegmentPins2[7] = {A0, A1, A2, A3, A4, A5, 13};
+    const int tempSegmentPins1[7] = {a, b, c, d, e, f, g};
+    const int tempSegmentPins2[7] = {a, b, c, d, e, f, g};
     memcpy(segmentPins1, tempSegmentPins1, sizeof(segmentPins1));
     memcpy(segmentPins2, tempSegmentPins2, sizeof(segmentPins2));
 
@@ -70,7 +70,7 @@ void DisplayMultiplex::timerIsr()
 {
     static bool _trocaDisplay = false;
     
-    if(_instance->_displayNumber == 110)
+    if(_instance->_displayNumber == tracos)
     {
         if(_trocaDisplay)
         {
