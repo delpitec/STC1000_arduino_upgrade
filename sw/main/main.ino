@@ -9,10 +9,6 @@
 // Instância da classe DisplayMultiplex
 DisplayMultiplex Display(3, 2, A0, A1, A2, A3, A4, A5, 13);
 
-// Botões
-const int button4 = 9;
-const int button5 = 10;
-
 int TemperaturaDeAbertura = 25;
 int TemperaturaDeFechamento = 15;
 
@@ -41,10 +37,6 @@ void setup()
 {
   Display.Begin();      // Inicializa o display
   Display.setupTimer(); // Configura o Timer para o display
-
-  // Configura o botão 0 e 1 como entrada com pull-up interno
-  pinMode(button4, INPUT); 
-  pinMode(button5, INPUT);
 
   carregarTemperaturasDaEEPROM();
 }
@@ -150,11 +142,11 @@ void temperaturaAutomatica()
   Display.showNumber(temperatura); // Exibe a temperatura no display
 
   //sensor de quando a janela deve parar de abrir e parar de fechar
-  if(temperatura <= TemperaturaDeFechamento && digitalRead(button4) == LOW)
+  if(temperatura <= TemperaturaDeFechamento && !SensorJanelaFechada.EstaAtivo())
   {
-    while(temperatura <= TemperaturaDeFechamento && digitalRead(button4) == LOW)
+    while(temperatura <= TemperaturaDeFechamento && !SensorJanelaFechada.EstaAtivo())
     {
-       if (digitalRead(button5) == HIGH)
+       if (SensorJanelaAberta.EstaAtivo())
        {
           Rele.Ligar();
           delay(1000);
@@ -166,11 +158,11 @@ void temperaturaAutomatica()
        }
     }
   }
-  else if(temperatura >= TemperaturaDeAbertura && digitalRead(button5) == LOW)
+  else if(temperatura >= TemperaturaDeAbertura && !SensorJanelaAberta.EstaAtivo())
   {
-    while(temperatura >= TemperaturaDeAbertura && digitalRead(button5) == LOW)
+    while(temperatura >= TemperaturaDeAbertura && !SensorJanelaAberta.EstaAtivo())
     {
-      if (digitalRead(button4) == HIGH)
+      if (SensorJanelaFechada.EstaAtivo())
       {
         Rele.Ligar();
         delay(1000);
