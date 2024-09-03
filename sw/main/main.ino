@@ -11,6 +11,8 @@ DisplayMultiplex Display(3, 2, A0, A1, A2, A3, A4, A5, 13);
 
 int TemperaturaDeAbertura = 25;
 int TemperaturaDeFechamento = 15;
+bool janelaFechada = false;
+bool janelaAberta = false;
 
 
 /* ------ Global Setup BEGIN -------*/
@@ -29,7 +31,9 @@ THERMISTOR thermistor(A7,             // Analog pin
                       3950,           // thermistor's beta coefficient
                       10000);         // Value of the series resistor
 
-CustomTimer tmr(3000); // Timer para exibir os caracteres
+//timers
+CustomTimer tmr(3000);
+CustomTimer tmrRele;
 
 /* ------ Global Setup END -------*/
 
@@ -142,41 +146,57 @@ void temperaturaAutomatica()
   Display.showNumber(temperatura); // Exibe a temperatura no display
 
   //sensor de quando a janela deve parar de abrir e parar de fechar
-  if(temperatura <= TemperaturaDeFechamento && !SensorJanelaFechada.EstaAtivo())
+  if(temperatura <= TemperaturaDeFechamento)
   {
-    while(temperatura <= TemperaturaDeFechamento && !SensorJanelaFechada.EstaAtivo())
+    if(!SensorJanelaFechada.EstaAtivo() && SensorJanelaAberta.EstaAtivo() && janelaFechada == false)
     {
-       if (SensorJanelaAberta.EstaAtivo())
-       {
-          Rele.Ligar();
-          delay(1000);
-          Rele.Desligar();
-       }
-       else
-       {
-          Rele.Desligar(); 
-       }
+      Rele.Ligar();
+      delay(1000);       
+      Rele.Desligar();
+      tmrRele.Init(10000); 
+      janelaFechada = true;
+      janelaAberta = false;
     }
-  }
-  else if(temperatura >= TemperaturaDeAbertura && !SensorJanelaAberta.EstaAtivo())
-  {
-    while(temperatura >= TemperaturaDeAbertura && !SensorJanelaAberta.EstaAtivo())
+    if(janelaFechada == true && tmrRele.Finished())
     {
-      if (SensorJanelaFechada.EstaAtivo())
+      if (!SensorJanelaFechada.EstaAtivo())
       {
-        Rele.Ligar();
-        delay(1000);
+        Rele.Ligar();  
+        delay(1000);       
         Rele.Desligar();
+        tmrRele.Init(10000); 
       }
       else
       {
-        Rele.Desligar();
+        janelaFechada = false;
       }
     }
   }
-  else
+  else if(temperatura >= TemperaturaDeAbertura)
   {
-    Rele.Desligar();
+    if(SensorJanelaFechada.EstaAtivo() && !SensorJanelaAberta.EstaAtivo() && janelaAberta == false)
+    {
+      Rele.Ligar();
+      delay(1000);
+      Rele.Desligar();
+      tmrRele.Init(10000); 
+      janelaAberta = true;
+      janelaFechada = false;
+    }
+    if(janelaAberta == true && tmrRele.Finished())
+    {
+      if (!SensorJanelaFechada.EstaAtivo())
+      {
+        Rele.Ligar();  
+        delay(1000);       
+        Rele.Desligar();
+        tmrRele.Init(10000); 
+      }
+      else
+      {
+        janelaAberta = false;
+      }
+    }
   }
 }
 
