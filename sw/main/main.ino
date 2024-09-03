@@ -31,8 +31,9 @@ THERMISTOR thermistor(A7,             // Analog pin
                       3950,           // thermistor's beta coefficient
                       10000);         // Value of the series resistor
 
-CustomTimer tmr(3000); // Timer para exibir os caracteres
-CustomTimer tmrRele;  // Timer de 10 segundos para verificar o sensor após ligar o relé
+//timers
+CustomTimer tmr(3000);
+CustomTimer tmrRele;
 
 /* ------ Global Setup END -------*/
 
