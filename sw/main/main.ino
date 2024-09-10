@@ -7,7 +7,7 @@
 #include "DisplayMultiplex.h"
 
 // Instância da classe DisplayMultiplex
-DisplayMultiplex Display(3, 2, A0, A1, A2, A3, A4, A5, 13);
+DisplayMultiplex Display(8, 9, A2, A1, 7, A4, A5, A0, A3);
 
 int TemperaturaDeAbertura = 25;
 int TemperaturaDeFechamento = 15;
@@ -17,12 +17,12 @@ bool janelaAberta = false;
 
 /* ------ Global Setup BEGIN -------*/
 
-SaidaDigital Rele(8);                       // [Pino 8]
-EntradaDigital Botao_CIMA(4,1,1);           // [Pino 04 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
+SaidaDigital Rele(13);                       // [Pino 13]
+EntradaDigital Botao_CIMA(11,1,1);           // [Pino 11 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
 EntradaDigital Botao_BAIXO(12,1,1);         // [Pino 12 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
-EntradaDigital Botao_S(11,1,1);             // [Pino 11 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
-EntradaDigital SensorJanelaAberta(9,1,1);   // [Pino 09 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
-EntradaDigital SensorJanelaFechada(10,1,1); // [Pino 10 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
+EntradaDigital Botao_S(10,1,1);             // [Pino 10 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
+EntradaDigital SensorJanelaAberta(5,1,1);   // [Pino 05 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
+EntradaDigital SensorJanelaFechada(6,1,1); // [Pino 06 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
 const int eepromTempMaior = 0; // Endereço para tempMaior no EEPROM
 const int eepromTempMenor = 2; // Endereço para tempMenor no EEPROM
 
@@ -67,7 +67,7 @@ void loop()
   {
     if(!tmr.Finished())
     {
-      Display.displayLetra(DisplayMultiplex::M, DisplayMultiplex::A);
+      Display.displayLetra(M, A);
     }
     else
     {
@@ -78,7 +78,7 @@ void loop()
   {
     if(!tmr.Finished())
     {
-      Display.displayLetra(DisplayMultiplex::A, DisplayMultiplex::U);
+      Display.displayLetra(A, U);
     }
     else
     {
@@ -89,7 +89,7 @@ void loop()
   {
     if(!tmr.Finished())
     {
-      Display.displayLetra(DisplayMultiplex::F, DisplayMultiplex::E);
+      Display.displayLetra(F, E);
     }
     else
     {
@@ -100,7 +100,7 @@ void loop()
   {
     if(!tmr.Finished())
     {
-      Display.displayLetra(DisplayMultiplex::A, DisplayMultiplex::B);
+      Display.displayLetra(A, B);
     }
     else
     {
@@ -117,7 +117,7 @@ void loop()
 
 void janelaManual() 
 {
-  Display.showNumber(DisplayMultiplex::tracos); // Exibe tracos
+  Display.showNumber(tracos); // Exibe tracos
 
   if(Botao_CIMA.EstaAtivoAguardando())
   {
