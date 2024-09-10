@@ -21,8 +21,8 @@ SaidaDigital Rele(13);                       // [Pino 13]
 EntradaDigital Botao_CIMA(11,1,1);           // [Pino 11 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
 EntradaDigital Botao_BAIXO(12,1,1);         // [Pino 12 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
 EntradaDigital Botao_S(10,1,1);             // [Pino 10 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
-EntradaDigital SensorJanelaAberta(5,1,1);   // [Pino 09 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
-EntradaDigital SensorJanelaFechada(6,1,1); // [Pino 10 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
+EntradaDigital SensorJanelaAberta(5,1,1);   // [Pino 05 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
+EntradaDigital SensorJanelaFechada(6,1,1); // [Pino 06 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
 const int eepromTempMaior = 0; // Endereço para tempMaior no EEPROM
 const int eepromTempMenor = 2; // Endereço para tempMenor no EEPROM
 
