@@ -11,6 +11,7 @@ DisplayMultiplex Display(8, 9, A2, A1, 7, A4, A5, A0, A3);
 
 int TemperaturaDeAbertura = 25;
 int TemperaturaDeFechamento = 15;
+int funcao = 1;
 bool janelaFechada = false;
 bool janelaAberta = false;
 
@@ -45,7 +46,7 @@ void setup()
   carregarTemperaturasDaEEPROM();
 }
 
-int funcao = 1;
+
 
 void loop() 
 {
@@ -117,7 +118,7 @@ void loop()
 
 void janelaManual() 
 {
-  Display.showNumber(tracos); // Exibe tracos
+  Display.displayLetra(tracos,tracos); // Exibe tracos
 
   if(Botao_CIMA.EstaAtivoAguardando())
   {
