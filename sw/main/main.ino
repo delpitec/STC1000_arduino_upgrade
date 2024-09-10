@@ -67,7 +67,7 @@ void loop()
   {
     if(!tmr.Finished())
     {
-      Display.displayLetra(DisplayMultiplex::M, DisplayMultiplex::A);
+      Display.displayLetra(M, A);
     }
     else
     {
@@ -78,7 +78,7 @@ void loop()
   {
     if(!tmr.Finished())
     {
-      Display.displayLetra(DisplayMultiplex::A, DisplayMultiplex::U);
+      Display.displayLetra(A, U);
     }
     else
     {
@@ -89,7 +89,7 @@ void loop()
   {
     if(!tmr.Finished())
     {
-      Display.displayLetra(DisplayMultiplex::F, DisplayMultiplex::E);
+      Display.displayLetra(F, E);
     }
     else
     {
@@ -100,7 +100,7 @@ void loop()
   {
     if(!tmr.Finished())
     {
-      Display.displayLetra(DisplayMultiplex::A, DisplayMultiplex::B);
+      Display.displayLetra(A, B);
     }
     else
     {
@@ -117,7 +117,7 @@ void loop()
 
 void janelaManual() 
 {
-  Display.showNumber(DisplayMultiplex::tracos); // Exibe tracos
+  Display.showNumber(tracos); // Exibe tracos
 
   if(Botao_CIMA.EstaAtivoAguardando())
   {
