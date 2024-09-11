@@ -39,7 +39,7 @@ void DisplayMultiplex::showNumber(int number)
 // Configura o TimerOne
 void DisplayMultiplex::setupTimer() 
 {
-    Timer1.initialize(500000); // Inicializa o Timer1 para interrupções a cada 500 ms
+    Timer1.initialize(10000); // simulação é 500000 / arduino : 10000
     Timer1.attachInterrupt(timerIsr); // Anexa a função de interrupção
 }
 
