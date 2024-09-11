@@ -4,15 +4,6 @@
 // Inicialização das variáveis estáticas
 DisplayMultiplex* DisplayMultiplex::_instance = nullptr;
 
-// Letras estáticas
-const int DisplayMultiplex::A = 11;
-const int DisplayMultiplex::B = 12;
-const int DisplayMultiplex::M = 15;
-const int DisplayMultiplex::U = 16;
-const int DisplayMultiplex::E = 13;
-const int DisplayMultiplex::F = 14;
-const int DisplayMultiplex::tracos = 110;
-
 DisplayMultiplex::DisplayMultiplex(int display1ControlPin, int display2ControlPin, int a, int b, int c, int d, int e, int f, int g)
 {
     // Inicializa os pinos dos segmentos para ambos os displays
