@@ -39,21 +39,26 @@ void DisplayMultiplex::showNumber(int number)
 // Configura o TimerOne
 void DisplayMultiplex::setupTimer() 
 {
-    Timer1.initialize(500000); // Inicializa o Timer1 para interrupções a cada 500 ms
+    Timer1.initialize(10000); // simulação é 500000 / arduino : 10000
     Timer1.attachInterrupt(timerIsr); // Anexa a função de interrupção
 }
 
-void DisplayMultiplex::displayLetra(int n1, int n2)
+void DisplayMultiplex::displayLetra(int L1, int L2)
 {
-    digitalWrite(_display1ControlPin, HIGH);
-    digitalWrite(_display2ControlPin, LOW);
-    displayDigit(segmentPins1, n1);
-    delay(5);
-
-    digitalWrite(_display1ControlPin, LOW);
-    digitalWrite(_display2ControlPin, HIGH);
-    displayDigit(segmentPins2, n2);
-    delay(5);
+  if (L1 == A && L2 == B){
+    showNumber(11 * 100 + 12);  // Codifica como 11-12
+  } else if (L1 == F && L2 == E){
+    showNumber(14 * 100 + 13);  // Codifica como 14-13
+  } else if (L1 == M && L2 == A){
+    showNumber(15 * 100 + 11);  // Codifica como 15-11
+  } else if (L1 == A && L2 == U) {
+    showNumber(11 * 100 + 16);  // Codifica como 11-16
+  } else if (L1 == tracos && L2 == tracos) {
+    showNumber(10 * 100 + 10);  // Codifica como 10-10 
+  } else 
+  {
+    showNumber(10 * 100 + 10);  // Inválido ... Codifica como 10-10
+  }
 }
 
 // Função de interrupção para atualização de displays
@@ -61,33 +66,36 @@ void DisplayMultiplex::timerIsr()
 {
     static bool _trocaDisplay = false;
     
-    if(_instance->_displayNumber == tracos)
+	// Mostra numeros
+    if(_instance->_displayNumber < 100)
     {
         if(_trocaDisplay)
-        {
-            digitalWrite(_instance->_display1ControlPin, HIGH);
-            digitalWrite(_instance->_display2ControlPin, LOW);
-            _instance->displayDigit(_instance->segmentPins1, 10);
-        }
-        else
-        {
-            digitalWrite(_instance->_display1ControlPin, LOW);
-            digitalWrite(_instance->_display2ControlPin, HIGH);
-            _instance->displayDigit(_instance->segmentPins2, 10);
-        }
-    }
-    else
-    {
-        if(_trocaDisplay)
-        {
-            int dezenas = _instance->_displayNumber / 10;
+        {	int dezenas = _instance->_displayNumber / 10;
             digitalWrite(_instance->_display1ControlPin, HIGH);
             digitalWrite(_instance->_display2ControlPin, LOW);
             _instance->displayDigit(_instance->segmentPins1, dezenas);
         }
         else
         {
-            int unidades = _instance->_displayNumber % 10;
+			int unidades = _instance->_displayNumber % 10;
+            digitalWrite(_instance->_display1ControlPin, LOW);
+            digitalWrite(_instance->_display2ControlPin, HIGH);
+            _instance->displayDigit(_instance->segmentPins2, unidades);
+        }
+    }
+    // Mostra as letras
+	else
+    {
+        if(_trocaDisplay)
+        {
+            int dezenas = _instance->_displayNumber / 100;
+            digitalWrite(_instance->_display1ControlPin, HIGH);
+            digitalWrite(_instance->_display2ControlPin, LOW);
+            _instance->displayDigit(_instance->segmentPins1, dezenas);
+        }
+        else
+        {
+            int unidades = _instance->_displayNumber % 100;
             digitalWrite(_instance->_display1ControlPin, LOW);
             digitalWrite(_instance->_display2ControlPin, HIGH);
             _instance->displayDigit(_instance->segmentPins2, unidades);

@@ -52,7 +52,7 @@ public:
     void setupTimer();
 
     // Mostra letras no display
-    void displayLetra(int n1, int n2);
+    void displayLetra(int L1, int L2);
 
 private:
     // Função de interrupção para atualização de displays

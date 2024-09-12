@@ -11,18 +11,18 @@ DisplayMultiplex Display(8, 9, A2, A1, 7, A4, A5, A0, A3);
 
 int TemperaturaDeAbertura = 25;
 int TemperaturaDeFechamento = 15;
+int funcao = 2;
 bool janelaFechada = false;
 bool janelaAberta = false;
 
 
 /* ------ Global Setup BEGIN -------*/
 
-SaidaDigital Rele(13);                       // [Pino 13]
+SaidaDigital Rele(4);                       // [Pino 4]
 EntradaDigital Botao_CIMA(11,1,1);           // [Pino 11 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
 EntradaDigital Botao_BAIXO(12,1,1);         // [Pino 12 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
 EntradaDigital Botao_S(10,1,1);             // [Pino 10 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
-EntradaDigital SensorJanelaAberta(5,1,1);   // [Pino 05 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
-EntradaDigital SensorJanelaFechada(6,1,1); // [Pino 06 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
+EntradaDigital SensorJanelaAberta(6,1,1);   // [Pino 06 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
 const int eepromTempMaior = 0; // Endereço para tempMaior no EEPROM
 const int eepromTempMenor = 2; // Endereço para tempMenor no EEPROM
 
@@ -41,25 +41,21 @@ void setup()
 {
   Display.Begin();      // Inicializa o display
   Display.setupTimer(); // Configura o Timer para o display
-
   carregarTemperaturasDaEEPROM();
 }
 
-int funcao = 1;
+
 
 void loop() 
 {
   if(Botao_S.EstaAtivoAguardando())
   {
-    tmr.Init(3000);
+    funcao++;
+    tmr.Init(1000);
     if(funcao > 4)
     {
       salvarTemperaturasNaEEPROM();
       funcao = 1;
-    }
-    else
-    { 
-      funcao++;
     }
   }
     
@@ -117,11 +113,11 @@ void loop()
 
 void janelaManual() 
 {
-  Display.showNumber(tracos); // Exibe tracos
+  Display.displayLetra(tracos,tracos); // Exibe tracos
 
   if(Botao_CIMA.EstaAtivoAguardando())
   {
-    if(SensorJanelaFechada.EstaAtivo() && !SensorJanelaAberta.EstaAtivo())
+    if(!SensorJanelaAberta.EstaAtivo())
     {
       Rele.Ligar();
       delay(1000);
@@ -130,7 +126,7 @@ void janelaManual()
   }
   else if(Botao_BAIXO.EstaAtivoAguardando())
   {
-    if(!SensorJanelaFechada.EstaAtivo() && SensorJanelaAberta.EstaAtivo())
+    if(SensorJanelaAberta.EstaAtivo())
     {
       Rele.Ligar();
       delay(1000);
@@ -145,10 +141,10 @@ void temperaturaAutomatica()
   
   Display.showNumber(temperatura); // Exibe a temperatura no display
 
-  //sensor de quando a janela deve parar de abrir e parar de fechar
+  // manda fechar janela
   if(temperatura <= TemperaturaDeFechamento)
   {
-    if(!SensorJanelaFechada.EstaAtivo() && SensorJanelaAberta.EstaAtivo() && janelaFechada == false)
+    if(SensorJanelaAberta.EstaAtivo() && janelaFechada == false)
     {
       Rele.Ligar();
       delay(1000);       
@@ -159,7 +155,7 @@ void temperaturaAutomatica()
     }
     if(janelaFechada == true && tmrRele.Finished())
     {
-      if (!SensorJanelaFechada.EstaAtivo())
+      if(SensorJanelaAberta.EstaAtivo())
       {
         Rele.Ligar();  
         delay(1000);       
@@ -172,9 +168,10 @@ void temperaturaAutomatica()
       }
     }
   }
+  // manda abrir janela
   else if(temperatura >= TemperaturaDeAbertura)
   {
-    if(SensorJanelaFechada.EstaAtivo() && !SensorJanelaAberta.EstaAtivo() && janelaAberta == false)
+    if(!SensorJanelaAberta.EstaAtivo() && janelaAberta == false)
     {
       Rele.Ligar();
       delay(1000);
@@ -185,7 +182,7 @@ void temperaturaAutomatica()
     }
     if(janelaAberta == true && tmrRele.Finished())
     {
-      if (!SensorJanelaFechada.EstaAtivo())
+      if (!SensorJanelaAberta.EstaAtivo())
       {
         Rele.Ligar();  
         delay(1000);       
