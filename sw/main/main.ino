@@ -12,6 +12,7 @@ DisplayMultiplex Display(8, 9, A2, A1, 7, A4, A5, A0, A3);
 int TemperaturaDeAbertura = 25;
 int TemperaturaDeFechamento = 15;
 int funcao = 2;
+
 bool janelaFechada = false;
 bool janelaAberta = false;
 
@@ -32,7 +33,8 @@ THERMISTOR thermistor(A7,             // Analog pin
                       10000);         // Value of the series resistor
 
 //timers
-CustomTimer tmr(3000);
+const unsigned int TempoLetras_ms = 1000;
+CustomTimer tmr(TempoLetras_ms);
 CustomTimer tmrRele;
 
 /* ------ Global Setup END -------*/
@@ -48,10 +50,14 @@ void setup()
 
 void loop() 
 {
-  if(Botao_S.EstaAtivoAguardando())
+  Botao_S.AtualizaLeitura();
+  Botao_CIMA.AtualizaLeitura();
+  Botao_BAIXO.AtualizaLeitura();
+  
+  if(Botao_S.TrasicaoAtivo())
   {
     funcao++;
-    tmr.Init(1000);
+    tmr.Init(TempoLetras_ms);
     if(funcao > 4)
     {
       salvarTemperaturasNaEEPROM();
@@ -115,7 +121,7 @@ void janelaManual()
 {
   Display.displayLetra(tracos,tracos); // Exibe tracos
 
-  if(Botao_CIMA.EstaAtivoAguardando())
+  if(Botao_CIMA.TrasicaoAtivo())
   {
     if(!SensorJanelaAberta.EstaAtivo())
     {
@@ -124,7 +130,7 @@ void janelaManual()
       Rele.Desligar();
     }
   }
-  else if(Botao_BAIXO.EstaAtivoAguardando())
+  else if(Botao_BAIXO.TrasicaoAtivo())
   {
     if(SensorJanelaAberta.EstaAtivo())
     {
@@ -200,11 +206,11 @@ void temperaturaAutomatica()
 
 void ajustarTemperaturaDeAbertura() 
 {
-  if(Botao_CIMA.EstaAtivoAguardando())
+  if(Botao_CIMA.TrasicaoAtivo())
   {
     TemperaturaDeAbertura++;
   }
-  if(Botao_BAIXO.EstaAtivoAguardando())
+  if(Botao_BAIXO.TrasicaoAtivo())
   {
     TemperaturaDeAbertura--;
   }
@@ -222,11 +228,11 @@ void ajustarTemperaturaDeAbertura()
 
 void ajustarTemperaturaDeFechamento() 
 {
-  if(Botao_CIMA.EstaAtivoAguardando())
+  if(Botao_CIMA.TrasicaoAtivo())
   {
     TemperaturaDeFechamento++;
   }
-  if(Botao_BAIXO.EstaAtivoAguardando())
+  if(Botao_BAIXO.TrasicaoAtivo())
   {
     TemperaturaDeFechamento--;
   }
