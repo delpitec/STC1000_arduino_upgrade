@@ -1,19 +1,28 @@
 #include <Arduino.h>
 #include "EntradaDigital.h"
 
-EntradaDigital::EntradaDigital(unsigned int pino, unsigned int modo, unsigned int pullUpInterno)
+EntradaDigital::EntradaDigital(unsigned int pino, unsigned int modo, unsigned int pullUpInterno, unsigned int debounce)
 {
 	_Pino = pino;
 	_Modo = modo;
 	_PullUpInterno = pullUpInterno;
-  
+    _Debounce = Bounce();
+
 	if(_PullUpInterno)
-		pinMode(pino, INPUT_PULLUP);
+		pinMode(_Pino, INPUT_PULLUP);
 	else
-		pinMode(pino, INPUT);
+		pinMode(_Pino, INPUT);
+
+	_Debounce.attach(_Pino);
+    _Debounce.interval(debounce); 
 }
 
-int EntradaDigital::EstaAtivo()
+void EntradaDigital::AtualizaLeitura()
+{
+	_Debounce.update();
+}
+
+bool EntradaDigital::EstaAtivo()
 {
 	if(!_Modo)
 	{
@@ -25,23 +34,15 @@ int EntradaDigital::EstaAtivo()
 	}
 }
 
-/* 
- * @brief Verifica se uma entrada está ativa e caso esteja retem a 
- *        saída da funcao enquanto ela não for for desativada.
- * @return 
- *        'true' se a entrada passou por um estado ativo e agora está desativada.
- *        'false' se não foi ativada.
- */
-int EntradaDigital::EstaAtivoAguardando()
+bool EntradaDigital::TrasicaoAtivo()
 {
-	if(EstaAtivo())
-	{	
-		while(EstaAtivo())
-			; // Aguarda Desativar
-		return true;
+		if(!_Modo)
+	{
+		return _Debounce.fell();
 	}
 	else
 	{
-		return false;
+		return _Debounce.rose();
 	}
 }
+
