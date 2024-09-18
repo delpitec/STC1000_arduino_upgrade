@@ -11,10 +11,11 @@ const int M = 15;
 const int U = 16;
 const int E = 13;
 const int F = 14;
+const int C = 17;
 const int tracos = 110;
 
  // Mapeamento dos segmentos para números e caracteres
-const int binarios[17][7] =
+const int binarios[18][7] =
 {
     {1, 1, 1, 1, 1, 1, 0}, // 0
     {0, 1, 1, 0, 0, 0, 0}, // 1
@@ -32,7 +33,8 @@ const int binarios[17][7] =
     {1, 0, 0, 1, 1, 1, 1}, // E 
     {1, 0, 0, 0, 1, 1, 1}, // F 
     {1, 1, 1, 0, 1, 1, 0}, // M
-    {0, 1, 1, 1, 1, 1, 0}  // U
+    {0, 1, 1, 1, 1, 1, 0},  // U
+    {1, 0, 0, 1, 1, 1, 0} // C
 };
 
 

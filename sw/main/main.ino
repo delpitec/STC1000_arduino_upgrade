@@ -11,10 +11,13 @@ DisplayMultiplex Display(8, 9, A2, A1, 7, A4, A5, A0, A3);
 
 int TemperaturaDeAbertura = 25;
 int TemperaturaDeFechamento = 15;
-int funcao = 2;
-
+int funcao = 0;
 bool janelaFechada = false;
 bool janelaAberta = false;
+
+// False: fim de curso = janela fechada 
+// True: fim de curso = janela aberta
+bool SensorFimDeCursoJanelaAberta = true;
 
 
 /* ------ Global Setup BEGIN -------*/
@@ -23,9 +26,10 @@ SaidaDigital Rele(4);                       // [Pino 4]
 EntradaDigital Botao_CIMA(11,1,1);           // [Pino 11 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
 EntradaDigital Botao_BAIXO(12,1,1);         // [Pino 12 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
 EntradaDigital Botao_S(10,1,1);             // [Pino 10 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
-EntradaDigital SensorJanelaAberta(6,1,1);   // [Pino 06 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
+EntradaDigital SensorFimDeCurso(6,1,1);   // [Pino 06 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
 const int eepromTempMaior = 0; // Endereço para tempMaior no EEPROM
 const int eepromTempMenor = 2; // Endereço para tempMenor no EEPROM
+const int eepromSensorFimDeCurso = 4; // Endereço para sensor de janela aberta ou fechada
 
 THERMISTOR thermistor(A7,             // Analog pin
                       10000,          // Nominal resistance at 25 ºC
@@ -36,6 +40,7 @@ THERMISTOR thermistor(A7,             // Analog pin
 const unsigned int TempoLetras_ms = 1000;
 CustomTimer tmr(TempoLetras_ms);
 CustomTimer tmrRele;
+CustomTimer tmrSensor;
 
 /* ------ Global Setup END -------*/
 
@@ -46,25 +51,49 @@ void setup()
   carregarTemperaturasDaEEPROM();
 }
 
-
-
 void loop() 
 {
   Botao_S.AtualizaLeitura();
   Botao_CIMA.AtualizaLeitura();
   Botao_BAIXO.AtualizaLeitura();
+  SensorFimDeCurso.AtualizaLeitura();
   
   if(Botao_S.TrasicaoAtivo())
   {
     funcao++;
     tmr.Init(TempoLetras_ms);
+    
     if(funcao > 4)
     {
       salvarTemperaturasNaEEPROM();
+      
+      if(!tmrSensor.Finished())
+      {
+        funcao = 5;
+      }
+      else
+      {
+        funcao = 1;
+      }
+    }
+    if(funcao > 5)
+    {
       funcao = 1;
     }
   }
-    
+
+  if(funcao == 0)
+  {
+    if(Botao_S.EstaAtivo())
+    {
+      tmrSensor.Init(10000);
+      funcao = 1;
+    }
+    else
+    {
+      funcao = 2;
+    }
+  }
   if (funcao == 1) 
   {
     if(!tmr.Finished())
@@ -109,13 +138,34 @@ void loop()
         ajustarTemperaturaDeAbertura();
     }
   }
+  else if (funcao == 5)
+  {
+    if(!tmr.Finished())
+    {
+      Display.displayLetra(F, C);
+    }
+    else
+    {
+      configuracaoSensor(); 
+    }
+  }
   else
   {
     ;
-  }
-  
+  }  
 }
 
+bool JanelaAberta()
+{
+   if(SensorFimDeCursoJanelaAberta == true)
+   {
+      return SensorFimDeCurso.EstaAtivo();
+   }
+   else
+   {
+      return !SensorFimDeCurso.EstaAtivo();
+   }
+}
 
 void janelaManual() 
 {
@@ -123,7 +173,7 @@ void janelaManual()
 
   if(Botao_CIMA.TrasicaoAtivo())
   {
-    if(!SensorJanelaAberta.EstaAtivo())
+    if(!JanelaAberta())
     {
       Rele.Ligar();
       delay(1000);
@@ -132,7 +182,7 @@ void janelaManual()
   }
   else if(Botao_BAIXO.TrasicaoAtivo())
   {
-    if(SensorJanelaAberta.EstaAtivo())
+    if(JanelaAberta())
     {
       Rele.Ligar();
       delay(1000);
@@ -150,7 +200,7 @@ void temperaturaAutomatica()
   // manda fechar janela
   if(temperatura <= TemperaturaDeFechamento)
   {
-    if(SensorJanelaAberta.EstaAtivo() && janelaFechada == false)
+    if(JanelaAberta() && janelaFechada == false)
     {
       Rele.Ligar();
       delay(1000);       
@@ -161,7 +211,7 @@ void temperaturaAutomatica()
     }
     if(janelaFechada == true && tmrRele.Finished())
     {
-      if(SensorJanelaAberta.EstaAtivo())
+      if(JanelaAberta())
       {
         Rele.Ligar();  
         delay(1000);       
@@ -177,7 +227,7 @@ void temperaturaAutomatica()
   // manda abrir janela
   else if(temperatura >= TemperaturaDeAbertura)
   {
-    if(!SensorJanelaAberta.EstaAtivo() && janelaAberta == false)
+    if(!JanelaAberta() && janelaAberta == false)
     {
       Rele.Ligar();
       delay(1000);
@@ -188,7 +238,7 @@ void temperaturaAutomatica()
     }
     if(janelaAberta == true && tmrRele.Finished())
     {
-      if (!SensorJanelaAberta.EstaAtivo())
+      if (!JanelaAberta())
       {
         Rele.Ligar();  
         delay(1000);       
@@ -248,6 +298,28 @@ void ajustarTemperaturaDeFechamento()
   Display.showNumber(TemperaturaDeFechamento); 
 }
 
+void configuracaoSensor()
+{
+  if(SensorFimDeCursoJanelaAberta == true)
+  {
+    Display.displayLetra(A, B);
+  }
+  else if(SensorFimDeCursoJanelaAberta == false)
+  {
+    Display.displayLetra(F, E);
+  }
+  
+  if(Botao_CIMA.TrasicaoAtivo())
+  {
+    SensorFimDeCursoJanelaAberta = true;
+  }
+  else if(Botao_BAIXO.TrasicaoAtivo())
+  {
+    SensorFimDeCursoJanelaAberta = false;
+  }
+  
+}
+
 void salvarTemperaturasNaEEPROM()
 {
   int tentativas = 0;
@@ -296,12 +368,35 @@ void salvarTemperaturasNaEEPROM()
       tentativas++;
     }
   }
+
+  tentativas = 0;
+  sucesso = false;
+
+  while (tentativas < 3 && !sucesso)
+  {
+    // Escrever o valor booleano na EEPROM
+    EEPROM.put(eepromSensorFimDeCurso, SensorFimDeCursoJanelaAberta);
+
+    // Ler o valor da EEPROM para verificar se foi salvo corretamente
+    bool valorLidos;
+    EEPROM.get(eepromSensorFimDeCurso, valorLidos);
+
+    if(valorLidos == SensorFimDeCursoJanelaAberta)
+    {
+      sucesso = true; // Salvo com sucesso
+    }
+    else
+    {
+      tentativas++;
+    }
+  }
 }
 
 void carregarTemperaturasDaEEPROM()
 {
   EEPROM.get(eepromTempMaior, TemperaturaDeAbertura);
   EEPROM.get(eepromTempMenor, TemperaturaDeFechamento);
+  EEPROM.get(eepromSensorFimDeCurso, SensorFimDeCursoJanelaAberta);
 
   // Verificar se os valores carregados são válidos
   if (TemperaturaDeAbertura <= TemperaturaDeFechamento || TemperaturaDeAbertura > 99 || TemperaturaDeFechamento < 0) 
