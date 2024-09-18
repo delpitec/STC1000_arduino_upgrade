@@ -39,7 +39,7 @@ void DisplayMultiplex::showNumber(int number)
 // Configura o TimerOne
 void DisplayMultiplex::setupTimer() 
 {
-    Timer1.initialize(10000); // simulação é 500000 / arduino : 10000
+    Timer1.initialize(500000); // simulação é 500000 / arduino : 10000
     Timer1.attachInterrupt(timerIsr); // Anexa a função de interrupção
 }
 
@@ -55,7 +55,10 @@ void DisplayMultiplex::displayLetra(int L1, int L2)
     showNumber(11 * 100 + 16);  // Codifica como 11-16
   } else if (L1 == tracos && L2 == tracos) {
     showNumber(10 * 100 + 10);  // Codifica como 10-10 
-  } else 
+  } else if (L1 == F && L2 == C) {
+    showNumber(14 * 100 + 17);  // Codifica como 10-10 
+  }
+   else 
   {
     showNumber(10 * 100 + 10);  // Inválido ... Codifica como 10-10
   }
