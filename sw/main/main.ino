@@ -20,7 +20,8 @@ bool janelaAberta = false;
 /* ------ Global Setup BEGIN -------*/
 
 SaidaDigital Rele(4);                       // [Pino 4]
-EntradaDigital Botao_CIMA(11,1,1);           // [Pino 11 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
+SaidaDigital Led(13);                       // [Pino 13]
+EntradaDigital Botao_CIMA(11,1,1);          // [Pino 11 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
 EntradaDigital Botao_BAIXO(12,1,1);         // [Pino 12 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
 EntradaDigital Botao_S(10,1,1);             // [Pino 10 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
 EntradaDigital SensorJanelaAberta(6,1,1);   // [Pino 06 , Lógica Invertida (Ativo em 0V) , Com Pull Up interno]
@@ -53,6 +54,7 @@ void loop()
   Botao_S.AtualizaLeitura();
   Botao_CIMA.AtualizaLeitura();
   Botao_BAIXO.AtualizaLeitura();
+  SensorJanelaAberta.AtualizaLeitura();
   
   if(Botao_S.TrasicaoAtivo())
   {
@@ -126,8 +128,10 @@ void janelaManual()
     if(!SensorJanelaAberta.EstaAtivo())
     {
       Rele.Ligar();
+      Led.Ligar();
       delay(1000);
       Rele.Desligar();
+	  Led.Desligar();
     }
   }
   else if(Botao_BAIXO.TrasicaoAtivo())
@@ -135,8 +139,10 @@ void janelaManual()
     if(SensorJanelaAberta.EstaAtivo())
     {
       Rele.Ligar();
+      Led.Ligar();
       delay(1000);
       Rele.Desligar();
+      Led.Desligar();
     }
   }
 }
@@ -153,8 +159,10 @@ void temperaturaAutomatica()
     if(SensorJanelaAberta.EstaAtivo() && janelaFechada == false)
     {
       Rele.Ligar();
+      Led.Ligar();
       delay(1000);       
       Rele.Desligar();
+      Led.Desligar();
       tmrRele.Init(10000); 
       janelaFechada = true;
       janelaAberta = false;
@@ -163,9 +171,11 @@ void temperaturaAutomatica()
     {
       if(SensorJanelaAberta.EstaAtivo())
       {
-        Rele.Ligar();  
+        Rele.Ligar();
+        Led.Ligar();	
         delay(1000);       
         Rele.Desligar();
+        Led.Desligar();
         tmrRele.Init(10000); 
       }
       else
@@ -180,8 +190,10 @@ void temperaturaAutomatica()
     if(!SensorJanelaAberta.EstaAtivo() && janelaAberta == false)
     {
       Rele.Ligar();
+      Led.Ligar();
       delay(1000);
       Rele.Desligar();
+      Led.Desligar();
       tmrRele.Init(10000); 
       janelaAberta = true;
       janelaFechada = false;
@@ -190,9 +202,11 @@ void temperaturaAutomatica()
     {
       if (!SensorJanelaAberta.EstaAtivo())
       {
-        Rele.Ligar();  
+        Rele.Ligar(); 
+        Led.Ligar();		
         delay(1000);       
         Rele.Desligar();
+        Led.Desligar();
         tmrRele.Init(10000); 
       }
       else
