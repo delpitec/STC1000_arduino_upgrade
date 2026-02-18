@@ -1,3 +1,11 @@
+/*
+ * Release: v1.0
+ * Plataforma: Arduino Nano
+ * Autores: Rafael Del Pino (delpitec@gmail.com)
+ *          Logan Fraga (loganfraga07@gmail.com)
+ *
+ */
+
 #include <thermistor.h>
 #include <TimerOne.h>
 #include <EEPROM.h>
