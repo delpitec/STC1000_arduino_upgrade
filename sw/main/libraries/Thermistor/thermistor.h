@@ -55,6 +55,8 @@ class THERMISTOR
      */
     uint16_t bCoefficient;
 
+    // uint16 calibration;
+
     /**
      * THERMISTOR
      * 
@@ -75,7 +77,10 @@ class THERMISTOR
      * @return temperature in 0.01 ºC
      */
     int read(void);
+    float resistenciaAtual;
 
+    float medirResistor(int adcPin, float R_fixed, float fatorCorrecao = 1.0, int numAmostras = 10);
+    float incrementoFisicoNTC(int contador, float tempAtualC);
     /**
     * read_int
     *
@@ -84,6 +89,15 @@ class THERMISTOR
     * @return temperature in 1 ºC
     */
     int read_int(void);
+
+    /**
+    * read_inverted
+    *
+    * Read temperature from thermistor
+    *
+    * @return temperature in 1 ºC
+    */
+    int read_inverted(void);
 };
 
 #endif

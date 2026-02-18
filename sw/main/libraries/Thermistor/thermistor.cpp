@@ -92,11 +92,14 @@ int THERMISTOR::read(void)
   }
   average /= NUMSAMPLES;
 
-  #ifdef VERBOSE_SENSOR_ENABLED  
-  Serial.print("Average analog reading "); 
+  #ifdef VERBOSE_SENSOR_ENABLED
+  Serial.print("Average analog reading ");
   Serial.println(average);
   #endif
- 
+
+  Serial.print("TESTE: ");
+  Serial.println(average * 3.3 / 4095.0);
+
   // convert the value to resistance
   average = ADC_RESOLUTION / average - 1;
   average = serialResistance * average;
@@ -105,9 +108,9 @@ int THERMISTOR::read(void)
   Serial.print("Thermistor resistance "); 
   Serial.println(average);
   #endif
- 
+
   float steinhart;
-  steinhart = average / nominalResistance;     // (R/Ro)
+  steinhart =  medirResistor(analogPin, nominalResistance, 1.10) / nominalResistance;     // (R/Ro)
   #ifdef PANSTAMP_NRG
   steinhart = logf(steinhart);                 // ln(R/Ro)
   #else
@@ -117,14 +120,14 @@ int THERMISTOR::read(void)
   steinhart += 1.0 / (TEMPERATURENOMINAL + 273.15); // + (1/To)
   steinhart = 1.0 / steinhart;                 // Invert
   steinhart -= 273.15;                         // convert to C
- 
+
   #ifdef VERBOSE_SENSOR_ENABLED
-  Serial.print("Temperature "); 
+  Serial.print("Temperature ");
   Serial.print(steinhart);
   Serial.println(" *C");
   #endif
-  
   return (int)(steinhart * 10);
+  // float THERMISTOR::incrementoFisicoNTC(int contador, float tempAtualC)
 }
 
 /**
@@ -137,4 +140,91 @@ int THERMISTOR::read(void)
 int THERMISTOR::read_int(void)
 {
   return this->read() / 10;
+}
+
+// Mudar para set calibration
+// tempAtualC remover e usar dentro direto o read()
+float THERMISTOR::incrementoFisicoNTC(int contador, float tempAtualC) {
+    const float R0 = 10000.0;
+    const float B  = 3950.0;
+    const float T0 = 25.0 + 273.15; // ????????? Usar os membros do método ex; nominalResistance
+    
+    
+    // calibration = contador;
+
+
+    // temperatura atual em Kelvin
+    float T = tempAtualC + 273.15;
+
+    // resistência atual do NTC
+    float R = R0 * exp(B * (1.0/T - 1.0/T0));
+
+    // deltaR calculado em °C (correto)
+    float Tc = tempAtualC;
+    float deltaR = 0.56 * Tc * Tc - 14.4 * Tc + 248.0;
+
+    // diminui a resistência -> aumenta temperatura
+    R -= deltaR * contador;
+
+    // conversão de volta à temperatura
+    float invT = 1.0/T0 + (1.0/B) * log(R / R0);
+    float newT = (1.0 / invT) - 273.15;
+
+    return newT;
+}
+
+// void SetCalibration()
+// float ReadCalibrated()
+//{
+//    float invT = 1.0/T0 + (1.0/B) * log(R / R0);
+//    float newT = (1.0 / invT) - 273.15;
+//    return newT
+//}
+
+
+float THERMISTOR::medirResistor(int adcPin, float R_fixed, float fatorCorrecao, int numAmostras) {
+    long soma = 0;
+    
+    // Ler várias vezes para reduzir ruído
+    for(int i = 0; i < numAmostras; i++){
+        soma += analogRead(adcPin);
+    }
+    
+    float adcMedia = soma / (float)numAmostras;
+    
+    // Converter ADC para tensão
+    float Vadc = adcMedia * 3.3 / 4095.0;
+    
+    // Aplicar fator de correção
+    Vadc *= fatorCorrecao;
+    
+    // Evitar divisão por zero
+    if (Vadc >= 3.3) Vadc = 3.29;
+    if (Vadc <= 0.0) Vadc = 0.01;
+    // Calcular resistência do resistor ligado ao GND
+    float R_var = R_fixed * (Vadc / (3.3 - Vadc));
+    return R_var;
+}
+
+int THERMISTOR::read_inverted(void)
+{
+  // Primeiro obtém a leitura normal
+  int normal_reading = this->read();
+  
+  // Define os limites esperados (ajuste conforme seu NTC)
+  const int min_expected = -100;   // -10.0°C em décimos
+  const int max_expected = 800;    // 80.0°C em décimos
+  
+  // Inverte a leitura: (max + min) - leitura_atual
+  int inverted = (max_expected + min_expected) - normal_reading;
+  
+  #ifdef VERBOSE_SENSOR_ENABLED
+    Serial.print("Normal: ");
+    Serial.print(normal_reading / 10.0);
+    Serial.print("°C | Inverted: ");
+    Serial.print(inverted / 10.0);
+    Serial.println("°C");
+  #endif
+  
+  return inverted;
 }
